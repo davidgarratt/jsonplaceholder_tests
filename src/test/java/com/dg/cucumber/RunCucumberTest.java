@@ -1,4 +1,4 @@
-package io.cucumber.skeleton;
+package com.dg.cucumber;
 
 import cucumber.api.CucumberOptions;
 import cucumber.api.junit.Cucumber;
