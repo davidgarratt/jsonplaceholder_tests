@@ -16,7 +16,7 @@ git clone https://github.com/davidgarratt/jsonplaceholder_tests.git
 
 Get Maven from: https://maven.apache.org/download.cgi?Preferred=http%3A%2F%2Fmirrors.ukfast.co.uk%2Fsites%2Fftp.apache.org%2F
 
-Unzip it and add the location + /bin to your path
+Unzip it and add the unzip location + /bin to your path. E.g: "C:\Program Files\apache-maven-3.6.1\bin"
 
 Open a command window navigate to the root of the project and run:
 
