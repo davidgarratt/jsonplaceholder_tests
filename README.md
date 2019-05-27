@@ -9,7 +9,9 @@ The application under test does not persist changes. Whilst the response receive
 
 # Observations:
 In addition to the above lack of persistence:
+
 Pagination would be a good addition - it currently returns the entire 100 preset records of posts on each request when no specific ID is provided in the request
+
 It returns a cookie - this may indicate that it may be holding a session in memory, something I would investigate further
 
 
