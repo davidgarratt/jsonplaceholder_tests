@@ -37,7 +37,7 @@ public class Stepdefs {
 //Actions	
 	@When("I get post id {int} into post entity {string}")
 	public void i_get_post_number(Integer postId, String postEntityName) {
-		ResponseEntity<Post> result = getPostEntity(postId);	
+		ResponseEntity<Post> result = getEntity(HttpMethod.GET,postId);	
 		postHolder.put(postEntityName, result.getBody());
 	}
 
@@ -69,7 +69,7 @@ public class Stepdefs {
 	@When("I get post id from {string} into post entity {string}")
 	public void i_get_post_id_from_into_post_entity(String existingPostEntityName, String postEntityName) {
 		int postID = postHolder.get(existingPostEntityName).getId().intValue();
-		ResponseEntity<Post> result = getPostEntity(postID);	
+		ResponseEntity<Post> result = getEntity(HttpMethod.GET,postID);	
 		postHolder.put(postEntityName, result.getBody());
 	}
 
@@ -108,6 +108,13 @@ public class Stepdefs {
 		postHolder.put(postHolderEntityName+"_response", putResponse.getBody());
 		assertEquals(HttpStatus.OK, putResponse.getStatusCode());
 	}
+	
+	@Then("I should be able to delete the post with post entity {string}")
+	public void i_should_be_able_to_delete_the_post_with_post_entity(String postHolderEntityName) {		
+		ResponseEntity<Post> putResponse = getEntity(HttpMethod.DELETE,postHolder.get(postHolderEntityName).getId()); 
+		postHolder.put(postHolderEntityName+"_response", putResponse.getBody());
+		assertEquals(HttpStatus.OK, putResponse.getStatusCode());
+	}
 
 	
 	
@@ -123,13 +130,13 @@ public class Stepdefs {
 		return result;
 	}
 	
-	private ResponseEntity<Post> getPostEntity(Integer postId) {
+	private ResponseEntity<Post> getEntity(HttpMethod method, Integer postId) {
 		//to be extracted a made generic across all entities
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 		HttpEntity<?> httpEntity = new HttpEntity<>(headers);
 		ResponseEntity<Post> result = restTemplate.exchange(globalHostName+"/posts/{PostId}",
-				HttpMethod.GET, httpEntity, Post.class,postId);
+				method, httpEntity, Post.class,postId);
 		return result;
 	}
 }

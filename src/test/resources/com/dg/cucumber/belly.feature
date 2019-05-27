@@ -25,4 +25,6 @@ Feature: Posts
 		Then I should be able to update the post with post entity "simplePutAfter"
 		And the post entity "simplePutAfter_response" should have a userID of 66
 		
-				 
+	Scenario: I delete a post
+		When I get post id 59 into post entity "simpleDeleteBefore"			
+		Then I should be able to delete the post with post entity "simpleDeleteBefore" 	 
