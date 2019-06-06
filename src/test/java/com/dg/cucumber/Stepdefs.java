@@ -1,9 +1,11 @@
 package com.dg.cucumber;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpEntity;
@@ -25,7 +27,7 @@ public class Stepdefs {
 	
 	//placeholder - picocontainer to be implemented to create a simple global scope
 	private HashMap<String, Post> postHolder = new HashMap<String, Post>();
-
+	private ResponseEntity<Post> lastResponse;
 	RestTemplate restTemplate = new RestTemplate();
 	
 //Preconditions	
@@ -72,8 +74,41 @@ public class Stepdefs {
 		ResponseEntity<Post> result = getEntity(HttpMethod.GET,postID);	
 		postHolder.put(postEntityName, result.getBody());
 	}
+	
+	@When("I create a post with")
+	public void i_create_a_post_with(List<Map<String, String>> dataTable) {
+		Post newPost = new Post();
+		newPost.setUserId(Integer.valueOf(dataTable.get(0).get("userID")));
+		newPost.setTitle(dataTable.get(0).get("title"));
+		newPost.setBody(dataTable.get(0).get("body"));
+		ResponseEntity<Post> result = (ResponseEntity<Post>) sendEntityByPost(HttpMethod.POST, newPost, Post.class, "posts");
+		lastResponse = result;
+	}
+	
+	@When("I get the created post from the server")
+	public void i_get_the_created_post_from_the_server() {
+		ResponseEntity<Post> result = getEntity(HttpMethod.GET,lastResponse.getBody().getId());
+		lastResponse = result;
+	}
 
 //Assertions
+	@Then("the post should have")
+	public void the_post_should_have(List<Map<String, String>> dataTable) {
+		assertEquals(Integer.valueOf(dataTable.get(0).get("userID")), lastResponse.getBody().getId());
+		assertEquals(dataTable.get(0).get("title"), lastResponse.getBody().getId());
+		assertEquals(dataTable.get(0).get("title"), lastResponse.getBody().getId());
+	}
+	
+	@Then("the response code should be {int}")
+	public void the_response_code_should_be(Integer statusCode) {
+		assertEquals((int)statusCode, (int)lastResponse.getStatusCode().value());
+	}
+	
+	@Then("the response code should NOT be {int}")
+	public void the_response_code_should_not_be(Integer statusCode) {
+		assertNotEquals((int)statusCode, (int)lastResponse.getStatusCode().value());
+	}
+
 	@Then("the title of post entity {string} should be {string}")
 	public void the_title_should_be(String postEntityName, String expectedTitle) {
 		assertEquals(expectedTitle, postHolder.get(postEntityName).getTitle());
@@ -81,7 +116,7 @@ public class Stepdefs {
 	
 	@Then("I should be able to create the post with post entity {string}")
 	public void i_should_be_able_to_create_the_post(String postEntityName) {
-		ResponseEntity<Post> result = (ResponseEntity<Post>) sendEntity(HttpMethod.POST, postEntityName, Post.class, "posts");	
+		ResponseEntity<Post> result = (ResponseEntity<Post>) sendEntityByName(HttpMethod.POST, postEntityName, Post.class, "posts");	
 		postHolder.put(postEntityName+"_response", result.getBody());
 		assertEquals(HttpStatus.CREATED, result.getStatusCode());
 	}
@@ -104,7 +139,7 @@ public class Stepdefs {
 
 	@Then("I should be able to update the post with post entity {string}")
 	public void i_should_be_able_to_update_the_post_with_post_entity(String postHolderEntityName) {		
-		ResponseEntity<Post> putResponse = (ResponseEntity<Post>) sendEntity(HttpMethod.PUT, postHolderEntityName, Post.class, "posts/"+postHolder.get(postHolderEntityName).getId());
+		ResponseEntity<Post> putResponse = (ResponseEntity<Post>) sendEntityByName(HttpMethod.PUT, postHolderEntityName, Post.class, "posts/"+postHolder.get(postHolderEntityName).getId());
 		postHolder.put(postHolderEntityName+"_response", putResponse.getBody());
 		assertEquals(HttpStatus.OK, putResponse.getStatusCode());
 	}
@@ -119,14 +154,18 @@ public class Stepdefs {
 	
 	
 	//reusable methods
-	private ResponseEntity<?> sendEntity(HttpMethod method, String postHolderEntityName, Class<?> inputClass, String entityName) {
+	private ResponseEntity<?> sendEntityByName(HttpMethod method, String postHolderEntityName, Class<?> inputClass, String entityName) {
+		return sendEntityByPost(method, postHolder.get(postHolderEntityName),inputClass, entityName);
+	}
+
+	private ResponseEntity<?> sendEntityByPost(HttpMethod method, Post post, Class<?> inputClass, String entityName) {
 		//to be extracted a made generic across all entities
 		HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-		HttpEntity<Post> httpEntity = new HttpEntity<>(postHolder.get(postHolderEntityName), headers);
+		HttpEntity<Post> httpEntity = new HttpEntity<>(post, headers);
 		//current fudge that allows put requests to specify a entity id needs rework
 		ResponseEntity<?> result = restTemplate.exchange(globalHostName+"/"+entityName,
-				method, httpEntity, inputClass);
+				method, httpEntity, inputClass);	
 		return result;
 	}
 	
